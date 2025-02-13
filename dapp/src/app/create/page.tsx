@@ -2,7 +2,7 @@
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import { newNFT } from "@/services/Web3Services";
+import { newNFT, uploadAndCreate} from "@/services/Web3Services";
 import React, { useState } from "react";
 
 export default function Create() {
@@ -24,6 +24,18 @@ export default function Create() {
       const file = evt.target.files[0];
       setNft(prevState =>({...prevState, image:file}))
     }
+  }
+
+  function btnSubmissionClick(){
+    if(!nft) return;
+
+    setMessage("Sending your NFT to blockchain..wait..")
+    uploadAndCreate(nft)
+      .then(itemId=>{
+        setMessage("NTF created successfully!");
+        window.location.href="/details/" + itemId;
+      })
+      .catch(err => setMessage(err.message))
   }
 
 
@@ -96,7 +108,7 @@ export default function Create() {
                       required
                     />
                   </div>
-                  <button type="button" className="bg-gradient-to-t bg-primary-500 font-bold from-primary-500 hover:bg-primary-600 hover:from-primary-600 hover:to-primary-500 inline-block px-12 py-2 rounded text-white to-primary-400">
+                  <button type="button" onClick={btnSubmissionClick} className="bg-gradient-to-t bg-primary-500 font-bold from-primary-500 hover:bg-primary-600 hover:from-primary-600 hover:to-primary-500 inline-block px-12 py-2 rounded text-white to-primary-400">
                     Submit
                   </button>
                   {message && <p className="font-bold mt-5">{message}</p>}

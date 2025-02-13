@@ -8,7 +8,7 @@ async function main() {
 
 
   const marketAddress = await nftMarket.getAddress();
-  console.log(`COntract deployed at ${marketAddress}`);
+  console.log(`Contract deployed at ${marketAddress}`);
 
   const NFTCollection = await ethers.getContractFactory("NFTCollection");
   const nftCollection = await NFTCollection.deploy(marketAddress);
