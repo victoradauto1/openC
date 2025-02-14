@@ -4,7 +4,7 @@
     "compile": "npx hardhat compile",
     "coverage": "npx hardhat coverage",
     "deploy": "npx hardhat run scripts/deploy.ts --network amoy",
-    "deploy2": "npx hardhat run scripts/deploy2.ts --network amoy"
+    "deploy2": "npx hardhat run scripts/deployCollection.ts --network amoy"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.2.0",

@@ -89,7 +89,7 @@ async function createItem(url: string, price: string): Promise<number>{
     const createTx= await marketContract.createMarketItem(COLLECTION_ADDRESS,tokenId, weiPrice, {value: listingPrice} );
     const createTxReceipt: ethers.ContractTransactionReceipt = await createTx();
     eventLog = createTxReceipt.logs.find(l => (l as EventLog).eventName === "MarketItemCreated") as EventLog;
-    const ItemId = Number(eventLog.args[0]);
+    const itemId = Number(eventLog.args[0]);
 
     return itemId;
     
@@ -107,7 +107,7 @@ export type NFT={
 }
 
 export async function loadDetails(itemId: number): Promise<NFT>{
-    const provider = getProvider();
+    const provider = await getProvider();
     const marketContract = new ethers.Contract(MARKETPLACE_ADDRESS, NFTMarketABI, provider);
     const collectionContract = new ethers.Contract(COLLECTION_ADDRESS, NFTCollection, provider);
 
@@ -154,11 +154,41 @@ export async function uploadAndCreate(nft: newNFT):Promise<number>{
 
 export async function loadMyNFTs(): Promise<NFT[]>{
     const provider = await getProvider();
+    const signer = await provider.getSigner();
 
     const marketContract = new ethers.Contract(MARKETPLACE_ADDRESS,  NFTMarketABI, provider);
     const collectionContract =new ethers.Contract(COLLECTION_ADDRESS,  NFTCollection, provider);
 
-    const data = await marketContract.fetchMyNFTs();
+    const data = await marketContract.fetchMyNFTs({from: signer.address });
+    if(!data || !data.length) return [];
+
+    const items = await Promise.all(data.map(async (item:NFT)=> {
+        const tokenUri = await collectionContract.tokenURI(item.tokenId);
+        const metadata = await axios.get(tokenUri.replace("ipfs://", "htpps://gateway.pinata.cloud/ipfs/"));
+        const price = ethers.formatUnits(item.price.toString(), "ether");
+
+        return{
+            price,
+            itemId: item.itemId,
+            tokenId: item.tokenId,
+            seller: item.seller,
+            owner: item.owner,
+            image: metadata.data.image.replace("ipfs://", "htpps://gateway.pinata.cloud/ipfs/"),
+            name: metadata.data.name,
+            description: metadata.data.descripiton
+        } as NFT
+    }))
+
+    return items;
+}
+
+export async function loadNFTs(): Promise<NFT[]>{
+    const provider = await getProvider();
+
+    const marketContract = new ethers.Contract(MARKETPLACE_ADDRESS,  NFTMarketABI, provider);
+    const collectionContract =new ethers.Contract(COLLECTION_ADDRESS,  NFTCollection, provider);
+
+    const data = await marketContract.fetchMarketItems();
     if(!data || !data.length) return [];
 
     const items = await Promise.all(data.map(async (item:NFT)=> {
